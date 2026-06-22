@@ -2,10 +2,8 @@
 创建项目 MySQL 数据库。
 
 运行方式：
-    python sql/01_create_mysql_database.py
+    python sql/创建MySQL数据库.py
 """
-
-import os
 
 import pymysql
 
@@ -13,8 +11,8 @@ import pymysql
 MYSQL_HOST = "127.0.0.1"  # MySQL 服务地址
 MYSQL_PORT = 3306  # MySQL 服务端口
 MYSQL_USER = "root"  # MySQL 登录用户名
-MYSQL_PASSWORD = os.environ.get("SHIXUN_MYSQL_PASSWORD", "1472580369@Lzh")  # 优先读取环境变量中的密码
-MYSQL_DATABASE = os.environ.get("SHIXUN_MYSQL_DATABASE", "shixun")  # 项目数据库名
+MYSQL_PASSWORD = ""  # MySQL 登录密码
+MYSQL_DATABASE = "shixun"  # 项目数据库名
 
 
 def get_mysql_connection():

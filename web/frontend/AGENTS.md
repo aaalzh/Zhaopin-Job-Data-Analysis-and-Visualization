@@ -1,0 +1,13 @@
+# Prototype Instructions
+
+Run the local server yourself and open the preview in the in-app browser. Do not give the user server-start instructions when you can run it.
+
+Before making substantial visual changes, use the Product Design plugin's `get-context` skill when the visual source is unclear or no longer matches the current goal. When the user gives durable prototype-specific design feedback, preferences, or decisions, record them in `AGENTS.md`.
+
+When implementing from a selected generated mock, treat that image as the source of truth for layout, component anatomy, density, spacing, color, typography, visible content, and hierarchy.
+
+## Selected direction
+
+- The user selected visual option 2: a blue-white, top-navigation, report-style recruitment analytics dashboard.
+- Preserve its wide desktop composition: inline KPI band, dominant city analysis, six compact distribution charts, trend/skills analysis, and a full-width job table.
+- Keep the UI restrained and presentation-ready; do not turn it into a dark neon command center or a sidebar-first admin layout.

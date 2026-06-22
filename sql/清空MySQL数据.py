@@ -2,13 +2,11 @@
 清空项目 MySQL 表数据。
 
 运行方式：
-    python sql/03_clear_mysql_data.py
+    python sql/清空MySQL数据.py
 
 说明：
     本脚本只清空数据，不删除表结构。
 """
-
-import os
 
 import pymysql
 
@@ -16,18 +14,19 @@ import pymysql
 MYSQL_HOST = "127.0.0.1"  # MySQL 服务地址
 MYSQL_PORT = 3306  # MySQL 服务端口
 MYSQL_USER = "root"  # MySQL 登录用户名
-MYSQL_PASSWORD = os.environ.get("SHIXUN_MYSQL_PASSWORD", "1472580369@Lzh")  # 优先读取环境变量中的密码
-MYSQL_DATABASE = os.environ.get("SHIXUN_MYSQL_DATABASE", "shixun")  # 项目数据库名
+MYSQL_PASSWORD = ""  # MySQL 登录密码
+MYSQL_DATABASE = "shixun"  # 项目数据库名
 
 TABLES = [
-    "raw_job_info",
-    "raw_company_info",
-    "raw_hr_status_info",
-    "crawler_log",
-    "clean_job_detail",
-    "clean_company_info",
-    "clean_hr_status_info",
-    "clean_log",
+    "yuan_shi_gangwei_xinxi",
+    "yuan_shi_gongsi_xinxi",
+    "yuan_shi_zhaopin_fuzeren_xinxi",
+    "pachong_yunxing_rizhi",
+    "qingxi_gangwei_mingxi",
+    "qingxi_gongsi_xinxi",
+    "qingxi_zhaopin_fuzeren_xinxi",
+    "qingxi_yunxing_rizhi",
+    "tongji_fenxi_jieguo",
 ]
 
 
@@ -58,15 +57,21 @@ def clear_mysql_data():
     Output:
     - None。
     Function:
-    - 使用 TRUNCATE 清空项目 8 张表的数据，并保留表结构。
+    - 使用 TRUNCATE 清空已存在的项目业务表和统计结果表，并保留表结构。
     """
     with get_mysql_connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-            for table in TABLES:
-                cursor.execute(f"TRUNCATE TABLE `{table}`")
-                print(f"已清空: {table}")
-            cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+            try:
+                for table in TABLES:
+                    cursor.execute("SHOW TABLES LIKE %s", (table,))
+                    if cursor.fetchone() is None:
+                        print(f"已跳过不存在的表: {table}")
+                        continue
+                    cursor.execute(f"TRUNCATE TABLE `{table}`")
+                    print(f"已清空: {table}")
+            finally:
+                cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
     print("MySQL 项目表数据已清空。")
 
 

@@ -63,7 +63,7 @@ class StatisticsService:
             sql = f"""
                 SELECT tongji_leixing, jieguo_json
                 FROM tongji_fenxi_jieguo
-                WHERE caiji_fanwei_biaoshi = %s
+                WHERE guanjianci_biaoshi = %s
                   AND tongji_leixing IN ({placeholders})
             """
             with self._mysql_connection() as connection:

@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from pymysql import MySQLError
 
 from config import Config
+from services.ai_service import AIAnalysisService, AIServiceError
 from services.job_service import JobService
 from services.redis_service import RedisService
 from services.statistics_service import STATISTIC_TYPES, StatisticsService
@@ -48,10 +49,12 @@ def create_app():
     Config.validate()
     app = Flask(__name__, static_folder=str(BASE_DIR / "static"), static_url_path="/static")
     app.config.from_object(Config)
+    app.json.ensure_ascii = False
 
     redis_service = RedisService(Config)
     statistics_service = StatisticsService(Config, redis_service)
     job_service = JobService(Config, redis_service)
+    ai_service = AIAnalysisService(Config, redis_service, statistics_service, job_service)
 
     @app.get("/")
     def index():
@@ -132,6 +135,26 @@ def create_app():
             return api_error(4001, "缺少 scope_id")
         return api_success(job_service.get_filters(scope_id))
 
+    @app.get("/api/ai/summary")
+    def ai_summary():
+        scope_id = request.args.get("scope_id", "").strip()
+        if not scope_id:
+            return api_error(4001, "缺少 scope_id")
+        return api_success(ai_service.generate_dashboard_summary(scope_id))
+
+    @app.post("/api/ai/chat")
+    def ai_chat():
+        payload = request.get_json(silent=True) or {}
+        scope_id = str(payload.get("scope_id", "")).strip()
+        question = str(payload.get("question", "")).strip()
+        if not scope_id:
+            return api_error(4001, "缺少 scope_id")
+        return api_success(ai_service.chat(scope_id, question))
+
+    @app.get("/api/ai/job/<job_id>")
+    def ai_job(job_id):
+        return api_success(ai_service.analyze_job(job_id))
+
     @app.errorhandler(ValueError)
     def value_error(error):
         return api_error(4002, str(error), 400)
@@ -144,6 +167,11 @@ def create_app():
     def mysql_error(error):
         app.logger.exception("MySQL 请求失败", exc_info=error)
         return api_error(5002, "MySQL 查询失败", 500)
+
+    @app.errorhandler(AIServiceError)
+    def ai_error(error):
+        app.logger.warning("AI 请求失败: %s", error)
+        return api_error(error.code, str(error), error.http_status)
 
     @app.errorhandler(Exception)
     def unexpected_error(error):

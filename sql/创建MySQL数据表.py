@@ -11,11 +11,7 @@ import argparse
 import pymysql
 
 
-MYSQL_HOST = "127.0.0.1"
-MYSQL_PORT = 3306
-MYSQL_USER = "root"
-MYSQL_PASSWORD = ""
-MYSQL_DATABASE = "shixun"
+from db_config import MYSQL_DATABASE, MYSQL_HOST, MYSQL_PASSWORD, MYSQL_PORT, MYSQL_USER
 
 
 XIN_BIAO = [
@@ -29,6 +25,9 @@ XIN_BIAO = [
     "qingxi_yunxing_rizhi",
 ]
 
+TONGJI_JIEGUO_BIAO = "tongji_fenxi_jieguo"
+SUOYOU_BIAO = XIN_BIAO + [TONGJI_JIEGUO_BIAO]
+
 
 CREATE_TABLE_SQL_LIST = [
     """
@@ -37,9 +36,9 @@ CREATE_TABLE_SQL_LIST = [
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '本次运行唯一标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '关键词和城市集合生成的采集范围标识',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词代码生成的关键词标识',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `laiyuan_chengshi` varchar(100) DEFAULT NULL COMMENT '本行来源城市',
       `chengshi_daima` varchar(50) DEFAULT NULL COMMENT '本行城市代码',
       `yema` int DEFAULT NULL COMMENT '来源页码',
@@ -84,7 +83,7 @@ CREATE_TABLE_SQL_LIST = [
       `renzheng_shouhu_xinxi` text COMMENT '认证或守护信息',
       `yuanshi_neirong` longtext COMMENT '原始接口内容',
       PRIMARY KEY (`zizeng_bianhao`),
-      KEY `suoyin_yuanshi_gangwei_fanwei` (`caiji_fanwei_biaoshi`),
+      KEY `suoyin_yuanshi_gangwei_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_yuanshi_gangwei_yunxing` (`yunxing_biaoshi`),
       KEY `suoyin_yuanshi_gangwei_biaoshi` (`gangwei_weiyi_biaoshi`),
       KEY `suoyin_yuanshi_gangwei_chengshi` (`laiyuan_chengshi`)
@@ -96,9 +95,9 @@ CREATE_TABLE_SQL_LIST = [
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '本次运行唯一标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '采集范围标识',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `laiyuan_chengshi` varchar(100) DEFAULT NULL COMMENT '本行来源城市',
       `gongsi_weiyi_biaoshi` char(32) DEFAULT NULL COMMENT '公司稳定唯一标识',
       `chuangjian_shijian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '写入时间',
@@ -111,7 +110,7 @@ CREATE_TABLE_SQL_LIST = [
       `rongzi_jieduan` varchar(100) DEFAULT NULL COMMENT '融资阶段',
       `hangye` varchar(200) DEFAULT NULL COMMENT '行业',
       PRIMARY KEY (`zizeng_bianhao`),
-      KEY `suoyin_yuanshi_gongsi_fanwei` (`caiji_fanwei_biaoshi`),
+      KEY `suoyin_yuanshi_gongsi_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_yuanshi_gongsi_yunxing` (`yunxing_biaoshi`),
       KEY `suoyin_yuanshi_gongsi_biaoshi` (`gongsi_weiyi_biaoshi`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='原始公司信息表'
@@ -122,9 +121,9 @@ CREATE_TABLE_SQL_LIST = [
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '本次运行唯一标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '采集范围标识',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `laiyuan_chengshi` varchar(100) DEFAULT NULL COMMENT '本行来源城市',
       `gangwei_weiyi_biaoshi` char(32) DEFAULT NULL COMMENT '岗位稳定唯一标识',
       `zhaopin_fuzeren_weiyi_biaoshi` char(32) DEFAULT NULL COMMENT '招聘负责人稳定唯一标识',
@@ -136,7 +135,7 @@ CREATE_TABLE_SQL_LIST = [
       `zhaopin_fuzeren_zhuangtai` varchar(200) DEFAULT NULL COMMENT '招聘负责人状态',
       `zhaopin_fuzeren_huoyue_biaoqian` varchar(500) DEFAULT NULL COMMENT '招聘负责人活跃标签',
       PRIMARY KEY (`zizeng_bianhao`),
-      KEY `suoyin_yuanshi_fuzeren_fanwei` (`caiji_fanwei_biaoshi`),
+      KEY `suoyin_yuanshi_fuzeren_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_yuanshi_fuzeren_yunxing` (`yunxing_biaoshi`),
       KEY `suoyin_yuanshi_fuzeren_gangwei` (`gangwei_weiyi_biaoshi`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='原始招聘负责人信息表'
@@ -144,12 +143,12 @@ CREATE_TABLE_SQL_LIST = [
     """
     CREATE TABLE IF NOT EXISTS `pachong_yunxing_rizhi` (
       `rizhi_bianhao` bigint NOT NULL AUTO_INCREMENT COMMENT '日志编号',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '采集范围标识',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '最近一次运行标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `jihua_chengshi_shuliang` int DEFAULT 0 COMMENT '计划城市数量',
       `chenggong_chengshi_shuliang` int DEFAULT 0 COMMENT '成功城市数量',
       `shibai_chengshi_shuliang` int DEFAULT 0 COMMENT '失败城市数量',
@@ -163,9 +162,9 @@ CREATE_TABLE_SQL_LIST = [
       `chuangjian_shijian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '首次创建时间',
       `gengxin_shijian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
       PRIMARY KEY (`rizhi_bianhao`),
-      UNIQUE KEY `weiyi_pachong_fanwei` (`caiji_fanwei_biaoshi`),
+      UNIQUE KEY `weiyi_pachong_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_pachong_guanjianci` (`guanjianci`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='每个采集范围一条最新爬虫日志'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='每个关键词一条最新爬虫日志'
     """,
     """
     CREATE TABLE IF NOT EXISTS `qingxi_gangwei_mingxi` (
@@ -174,9 +173,9 @@ CREATE_TABLE_SQL_LIST = [
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '来源运行标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '采集范围标识',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `laiyuan_chengshi` varchar(100) DEFAULT NULL COMMENT '来源城市',
       `gangwei_weiyi_biaoshi` char(32) DEFAULT NULL COMMENT '岗位稳定唯一标识',
       `chuangjian_shijian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '写入时间',
@@ -200,7 +199,7 @@ CREATE_TABLE_SQL_LIST = [
       `jineng_biaoqian` text COMMENT '技能标签',
       `zhiwei_miaoshu` longtext COMMENT '职位描述',
       PRIMARY KEY (`zizeng_bianhao`),
-      KEY `suoyin_qingxi_gangwei_fanwei` (`caiji_fanwei_biaoshi`),
+      KEY `suoyin_qingxi_gangwei_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_qingxi_gangwei_yunxing` (`yunxing_biaoshi`),
       KEY `suoyin_qingxi_gangwei_biaoshi` (`gangwei_weiyi_biaoshi`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='清洗岗位明细表'
@@ -211,9 +210,9 @@ CREATE_TABLE_SQL_LIST = [
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '来源运行标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '采集范围标识',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `laiyuan_chengshi` varchar(100) DEFAULT NULL COMMENT '来源城市',
       `gongsi_weiyi_biaoshi` char(32) DEFAULT NULL COMMENT '公司稳定唯一标识',
       `chuangjian_shijian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '写入时间',
@@ -223,7 +222,7 @@ CREATE_TABLE_SQL_LIST = [
       `rongzi_jieduan` varchar(100) DEFAULT NULL COMMENT '融资阶段',
       `hangye` varchar(200) DEFAULT NULL COMMENT '行业',
       PRIMARY KEY (`zizeng_bianhao`),
-      KEY `suoyin_qingxi_gongsi_fanwei` (`caiji_fanwei_biaoshi`),
+      KEY `suoyin_qingxi_gongsi_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_qingxi_gongsi_biaoshi` (`gongsi_weiyi_biaoshi`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='清洗公司信息表'
     """,
@@ -233,9 +232,9 @@ CREATE_TABLE_SQL_LIST = [
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '来源运行标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '采集范围标识',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `laiyuan_chengshi` varchar(100) DEFAULT NULL COMMENT '来源城市',
       `gangwei_weiyi_biaoshi` char(32) DEFAULT NULL COMMENT '岗位稳定唯一标识',
       `zhaopin_fuzeren_weiyi_biaoshi` char(32) DEFAULT NULL COMMENT '招聘负责人稳定唯一标识',
@@ -245,19 +244,19 @@ CREATE_TABLE_SQL_LIST = [
       `zhaopin_fuzeren_zhuangtai` varchar(200) DEFAULT NULL COMMENT '招聘负责人状态',
       `zhaopin_fuzeren_huoyue_biaoqian` varchar(500) DEFAULT NULL COMMENT '招聘负责人活跃标签',
       PRIMARY KEY (`zizeng_bianhao`),
-      KEY `suoyin_qingxi_fuzeren_fanwei` (`caiji_fanwei_biaoshi`),
+      KEY `suoyin_qingxi_fuzeren_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_qingxi_fuzeren_gangwei` (`gangwei_weiyi_biaoshi`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='清洗招聘负责人信息表'
     """,
     """
     CREATE TABLE IF NOT EXISTS `qingxi_yunxing_rizhi` (
       `rizhi_bianhao` bigint NOT NULL AUTO_INCREMENT COMMENT '日志编号',
-      `caiji_fanwei_biaoshi` char(64) NOT NULL COMMENT '采集范围标识',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
       `yunxing_biaoshi` varchar(150) NOT NULL COMMENT '来源运行标识',
       `guanjianci` varchar(100) NOT NULL COMMENT '搜索关键词',
       `guanjianci_daima` varchar(100) NOT NULL COMMENT '关键词拼音代码',
-      `chengshi_fanwei` text COMMENT '规范化城市名称集合',
-      `chengshi_daima_fanwei` text COMMENT '规范化城市代码集合',
+      `chengshi_liebiao` text COMMENT '规范化城市名称集合',
+      `chengshi_daima_liebiao` text COMMENT '规范化城市代码集合',
       `gangwei_jilu_shuliang` int DEFAULT 0 COMMENT '岗位记录数量',
       `gongsi_jilu_shuliang` int DEFAULT 0 COMMENT '公司记录数量',
       `zhaopin_fuzeren_jilu_shuliang` int DEFAULT 0 COMMENT '招聘负责人记录数量',
@@ -269,9 +268,22 @@ CREATE_TABLE_SQL_LIST = [
       `chuangjian_shijian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '首次创建时间',
       `gengxin_shijian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最近更新时间',
       PRIMARY KEY (`rizhi_bianhao`),
-      UNIQUE KEY `weiyi_qingxi_fanwei` (`caiji_fanwei_biaoshi`),
+      UNIQUE KEY `weiyi_qingxi_guanjianci_biaoshi` (`guanjianci_biaoshi`),
       KEY `suoyin_qingxi_guanjianci` (`guanjianci`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='每个采集范围一条最新清洗日志'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='每个关键词一条最新清洗日志'
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS `tongji_fenxi_jieguo` (
+      `zizeng_bianhao` bigint NOT NULL AUTO_INCREMENT COMMENT '自增编号',
+      `guanjianci_biaoshi` varchar(100) NOT NULL COMMENT '关键词标识',
+      `guanjianci` varchar(100) DEFAULT NULL COMMENT '搜索关键词',
+      `tongji_leixing` varchar(100) NOT NULL COMMENT '统计类型',
+      `jieguo_json` longtext NOT NULL COMMENT '统计结果JSON',
+      `gengxin_shijian` datetime NOT NULL COMMENT '更新时间',
+      PRIMARY KEY (`zizeng_bianhao`),
+      UNIQUE KEY `weiyi_guanjianci_tongji` (`guanjianci_biaoshi`, `tongji_leixing`),
+      KEY `suoyin_tongji_leixing` (`tongji_leixing`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Spark统计分析结果'
     """,
 ]
 
@@ -293,16 +305,16 @@ def create_tables(chongjian=False):
         with connection.cursor() as cursor:
             if chongjian:
                 cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-                for table in XIN_BIAO + ["tongji_fenxi_jieguo"]:
+                for table in SUOYOU_BIAO:
                     cursor.execute(f"DROP TABLE IF EXISTS `{table}`")
                 cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
-                print("当前业务表和统计结果表已删除；统计表需重新运行创建统计分析结果表.py。")
+                print("当前业务表和统计结果表已删除，正在重建。")
 
             for sql in CREATE_TABLE_SQL_LIST:
                 cursor.execute(sql)
 
-    print("MySQL 拼音表结构已准备好：")
-    for table in XIN_BIAO:
+    print("MySQL 业务表和统计结果表结构已准备好：")
+    for table in SUOYOU_BIAO:
         print(f"- {table}")
 
 

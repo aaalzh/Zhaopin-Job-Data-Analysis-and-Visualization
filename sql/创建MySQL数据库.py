@@ -8,11 +8,7 @@
 import pymysql
 
 
-MYSQL_HOST = "127.0.0.1"  # MySQL 服务地址
-MYSQL_PORT = 3306  # MySQL 服务端口
-MYSQL_USER = "root"  # MySQL 登录用户名
-MYSQL_PASSWORD = ""  # MySQL 登录密码
-MYSQL_DATABASE = "shixun"  # 项目数据库名
+from db_config import MYSQL_DATABASE, MYSQL_HOST, MYSQL_PASSWORD, MYSQL_PORT, MYSQL_USER
 
 
 def get_mysql_connection():

@@ -60,7 +60,7 @@ class JobService:
         return text.strip()
 
     def _build_filters(self, params):
-        clauses = ["caiji_fanwei_biaoshi = %s"]
+        clauses = ["guanjianci_biaoshi = %s"]
         values = [params["scope_id"]]
         field_map = {
             "city": "laiyuan_chengshi",
@@ -195,7 +195,7 @@ class JobService:
                         f"""
                         SELECT DISTINCT {column} AS value
                         FROM qingxi_gangwei_mingxi
-                        WHERE caiji_fanwei_biaoshi = %s
+                        WHERE guanjianci_biaoshi = %s
                           AND {column} IS NOT NULL
                           AND TRIM({column}) <> ''
                         ORDER BY {column}
@@ -208,13 +208,13 @@ class JobService:
 
     def get_scopes(self):
         sql = """
-            SELECT caiji_fanwei_biaoshi AS scope_id,
+            SELECT guanjianci_biaoshi AS scope_id,
                    MAX(guanjianci) AS keyword,
-                   MAX(chengshi_fanwei) AS cities,
+                   MAX(chengshi_liebiao) AS cities,
                    COUNT(*) AS job_count,
                    MAX(chuangjian_shijian) AS updated_at
             FROM qingxi_gangwei_mingxi
-            GROUP BY caiji_fanwei_biaoshi
+            GROUP BY guanjianci_biaoshi
             ORDER BY updated_at DESC
         """
         with self._mysql_connection() as connection:
